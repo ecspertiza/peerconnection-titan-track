@@ -1,0 +1,11 @@
+﻿  conductor.cc
+e:\qt\techinline\titan\third_party\webrtc\win32\src\examples\peerconnection\client\peerclient\peerclient\conductor.h(20): fatal error C1083: Cannot open include file: 'api/mediastreaminterface.h': No such file or directory
+  defaults.cc
+e:\qt\techinline\titan\third_party\webrtc\win32\src\examples\peerconnection\client\peerclient\peerclient\defaults.cc(22): fatal error C1083: Cannot open include file: 'rtc_base/arraysize.h': No such file or directory
+  main.cc
+e:\qt\techinline\titan\third_party\webrtc\win32\src\examples\peerconnection\client\peerclient\peerclient\conductor.h(20): fatal error C1083: Cannot open include file: 'api/mediastreaminterface.h': No such file or directory
+  main_wnd.cc
+e:\qt\techinline\titan\third_party\webrtc\win32\src\examples\peerconnection\client\peerclient\peerclient\main_wnd.h(18): fatal error C1083: Cannot open include file: 'api/mediastreaminterface.h': No such file or directory
+  peer_connection_client.cc
+e:\qt\techinline\titan\third_party\webrtc\win32\src\examples\peerconnection\client\peerclient\peerclient\peer_connection_client.h(18): fatal error C1083: Cannot open include file: 'rtc_base/nethelpers.h': No such file or directory
+  Generating Code...
