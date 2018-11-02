@@ -124,12 +124,13 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\third_party/jsoncpp/overrides/include/;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\third_party/jsoncpp/source/include;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src/third_party/abseil-cpp/;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src/third_party/usrsctp/usrsctplib/usrsctplib/;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\third_party\libyuv\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\out\release_x86\obj;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\out\release_x86\obj\rtc_tools;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\out\release_x86\obj\rtc_base;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\webrtc\out\release_x86\obj\api\audio_codecs\;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\webrtc\out\release_x86\obj\api\audio_codecs\opus\;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\webrtc\out\release_x86\obj\api\audio_codecs\isac\;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\webrtc\out\release_x86\obj\api\audio_codecs\ilbc\;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\webrtc\out\release_x86\obj\api\audio_codecs\L16\;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\webrtc\out\release_x86\obj\api\audio_codecs\g711\;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\webrtc\out\release_x86\obj\api\audio_codecs\g722\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>webrtc.lib;builtin_audio_decoder_factory.lib;audio_decoder_opus.lib;audio_decoder_isac_float.lib;audio_decoder_ilbc.lib;audio_decoder_L16.lib;audio_decoder_g711.lib;audio_decoder_g722.lib;rtc_base.lib;command_line_parser.lib;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\out\release_x86\obj\rtc_base\rtc_json\json.obj;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\out\release_x86\obj\third_party\jsoncpp\jsoncpp\json_reader.obj;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\out\release_x86\obj\third_party\jsoncpp\jsoncpp\json_value.obj;$(TITAN_THIRD_PARTY)\webrtc\$(Platform)\src\out\release_x86\obj\third_party\jsoncpp\jsoncpp\json_writer.obj;winmm.lib;iphlpapi.lib;comsupp.lib;secur32.lib;ws2_32.lib;crypt32.lib;Advapi32.lib;user32.lib;shell32.lib;gdi32.lib;Strmiids.lib;dmoguids.lib;wmcodecdspuuid.lib;amstrmid.lib;msdmo.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>

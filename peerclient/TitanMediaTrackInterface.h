@@ -6,13 +6,18 @@
 #include <rtc_base/refcountedobject.h>
 #include "pc/mediastreamtrack.h"
 
-class TitanTrackInterface : public rtc::RefCountedObject<webrtc::MediaStreamTrackInterface>
+class TitanTrackInterface : public rtc::RefCountedObject<webrtc::VideoTrackInterface> 
 {
-
+public:
+  TitanTrackInterface() = default;
+  void AddOrUpdateSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
+                       const rtc::VideoSinkWants& wants) override {}
+  void RemoveSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override {}
 };
 
 
 class TitanTrack : public webrtc::MediaStreamTrack<TitanTrackInterface>,
+                   public rtc::VideoSourceBase,
                    public webrtc::ObserverInterface 
 {
  public:
@@ -23,7 +28,14 @@ class TitanTrack : public webrtc::MediaStreamTrack<TitanTrackInterface>,
 
   void OnChanged() override;
 
+  webrtc::VideoTrackSourceInterface* GetSource() const override {
+    return _titanSource;
+  }
+
+  void AddOrUpdateSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
+                       const rtc::VideoSinkWants& wants) override;
+  void RemoveSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
 
 private:
-  TitanTrackSourceInterface* _titanSource;
+ rtc::scoped_refptr<TitanTrackSourceInterface> _titanSource;
 };

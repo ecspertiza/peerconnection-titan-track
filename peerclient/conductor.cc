@@ -102,7 +102,10 @@ bool Conductor::InitializePeerConnection() {
     DeletePeerConnection();
   }
 
-  AddTracks();
+  if (master)
+  {
+    AddTracks();
+  }
 
   return peer_connection_ != nullptr;
 }
@@ -365,6 +368,8 @@ void Conductor::ConnectToPeer(int peer_id) {
   RTC_DCHECK(peer_id_ == -1);
   RTC_DCHECK(peer_id != -1);
 
+  master = true;
+
   if (peer_connection_.get()) {
     main_wnd_->MessageBox("Error",
         "We only support connecting to one peer at a time", true);
@@ -427,27 +432,27 @@ void Conductor::AddTracks() {
                       << result_or_error.error().message();
   }
 
-  std::unique_ptr<cricket::VideoCapturer> video_device =
-      OpenVideoCaptureDevice();
-  if (video_device) {
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_(
-        peer_connection_factory_->CreateVideoTrack(
-            kVideoLabel, peer_connection_factory_->CreateVideoSource(
-                             std::move(video_device), nullptr)));
-    main_wnd_->StartLocalRenderer(video_track_);
-
-    result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});
-    if (!result_or_error.ok()) {
-      RTC_LOG(LS_ERROR) << "Failed to add video track to PeerConnection: "
-                        << result_or_error.error().message();
-    }
-  } else {
-    RTC_LOG(LS_ERROR) << "OpenVideoCaptureDevice failed";
-  }
+  // std::unique_ptr<cricket::VideoCapturer> video_device =
+  //     OpenVideoCaptureDevice();
+  // if (video_device) {
+  //   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_(
+  //       peer_connection_factory_->CreateVideoTrack(
+  //           kVideoLabel, peer_connection_factory_->CreateVideoSource(
+  //                            std::move(video_device), nullptr)));
+  //   main_wnd_->StartLocalRenderer(video_track_);
+  //
+  //   result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});
+  //   if (!result_or_error.ok()) {
+  //     RTC_LOG(LS_ERROR) << "Failed to add video track to PeerConnection: "
+  //                       << result_or_error.error().message();
+  //   }
+  // } else {
+  //   RTC_LOG(LS_ERROR) << "OpenVideoCaptureDevice failed";
+  // }
 
   std::string id = "id";
 
-  titanSource = new TitanTrackSource;
+  titanSource = new TitanTrackSource(true, false);
   titanTrack = new TitanTrack(id, titanSource);
 
   result_or_error = peer_connection_->AddTrack(titanTrack, {kStreamId});
@@ -517,7 +522,7 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
     case NEW_TRACK_ADDED: {
       auto* track = reinterpret_cast<webrtc::MediaStreamTrackInterface*>(data);
       if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
-        auto* video_track = static_cast<webrtc::VideoTrackInterface*>(track);
+        auto* video_track = static_cast<TitanTrackInterface*>(track);
         main_wnd_->StartRemoteRenderer(video_track);
       }
       track->Release();

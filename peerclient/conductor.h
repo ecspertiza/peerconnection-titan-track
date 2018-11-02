@@ -131,6 +131,9 @@ class Conductor
   MainWindow* main_wnd_;
   std::deque<std::string*> pending_messages_;
   std::string server_;
+
+
+  bool master = false;
 };
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_CONDUCTOR_H_

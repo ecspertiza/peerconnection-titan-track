@@ -18,11 +18,14 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "third_party/libyuv/include/libyuv/convert_argb.h"
+#include <iostream>
 
 ATOM MainWnd::wnd_class_ = 0;
 const wchar_t MainWnd::kClassName[] = L"WebRTC_MainWnd";
 
 using rtc::sprintfn;
+
+uint8_t bufferColor[3] = {0xFF, 0xFF, 0xFf};
 
 namespace {
 
@@ -199,7 +202,7 @@ void MainWnd::MessageBox(const char* caption, const char* text, bool is_error) {
 }
 
 
-void MainWnd::StartLocalRenderer(webrtc::VideoTrackInterface* local_video) {
+void MainWnd::StartLocalRenderer(TitanTrackInterface* local_video) {
   local_renderer_.reset(new VideoRenderer(handle(), 1, 1, local_video));
 }
 
@@ -207,7 +210,7 @@ void MainWnd::StopLocalRenderer() {
   local_renderer_.reset();
 }
 
-void MainWnd::StartRemoteRenderer(webrtc::VideoTrackInterface* remote_video) {
+void MainWnd::StartRemoteRenderer(TitanTrackInterface* remote_video) {
   remote_renderer_.reset(new VideoRenderer(handle(), 1, 1, remote_video));
 }
 
@@ -227,91 +230,9 @@ void MainWnd::OnPaint() {
   RECT rc;
   ::GetClientRect(handle(), &rc);
 
-  VideoRenderer* local_renderer = local_renderer_.get();
-  VideoRenderer* remote_renderer = remote_renderer_.get();
-  if (ui_ == STREAMING && remote_renderer && local_renderer) {
-    AutoLock<VideoRenderer> local_lock(local_renderer);
-    AutoLock<VideoRenderer> remote_lock(remote_renderer);
-
-    const BITMAPINFO& bmi = remote_renderer->bmi();
-    int height = abs(bmi.bmiHeader.biHeight);
-    int width = bmi.bmiHeader.biWidth;
-
-    const uint8_t* image = remote_renderer->image();
-    if (image != NULL) {
-      HDC dc_mem = ::CreateCompatibleDC(ps.hdc);
-      ::SetStretchBltMode(dc_mem, HALFTONE);
-
-      // Set the map mode so that the ratio will be maintained for us.
-      HDC all_dc[] = { ps.hdc, dc_mem };
-      for (int i = 0; i < arraysize(all_dc); ++i) {
-        SetMapMode(all_dc[i], MM_ISOTROPIC);
-        SetWindowExtEx(all_dc[i], width, height, NULL);
-        SetViewportExtEx(all_dc[i], rc.right, rc.bottom, NULL);
-      }
-
-      HBITMAP bmp_mem = ::CreateCompatibleBitmap(ps.hdc, rc.right, rc.bottom);
-      HGDIOBJ bmp_old = ::SelectObject(dc_mem, bmp_mem);
-
-      POINT logical_area = { rc.right, rc.bottom };
-      DPtoLP(ps.hdc, &logical_area, 1);
-
-      HBRUSH brush = ::CreateSolidBrush(RGB(0, 0, 0));
-      RECT logical_rect = {0, 0, logical_area.x, logical_area.y };
-      ::FillRect(dc_mem, &logical_rect, brush);
-      ::DeleteObject(brush);
-
-      int x = (logical_area.x / 2) - (width / 2);
-      int y = (logical_area.y / 2) - (height / 2);
-
-      StretchDIBits(dc_mem, x, y, width, height,
-                    0, 0, width, height, image, &bmi, DIB_RGB_COLORS, SRCCOPY);
-
-      if ((rc.right - rc.left) > 200 && (rc.bottom - rc.top) > 200) {
-        const BITMAPINFO& bmi = local_renderer->bmi();
-        image = local_renderer->image();
-        int thumb_width = bmi.bmiHeader.biWidth / 4;
-        int thumb_height = abs(bmi.bmiHeader.biHeight) / 4;
-        StretchDIBits(dc_mem,
-            logical_area.x - thumb_width - 10,
-            logical_area.y - thumb_height - 10,
-            thumb_width, thumb_height,
-            0, 0, bmi.bmiHeader.biWidth, -bmi.bmiHeader.biHeight,
-            image, &bmi, DIB_RGB_COLORS, SRCCOPY);
-      }
-
-      BitBlt(ps.hdc, 0, 0, logical_area.x, logical_area.y,
-             dc_mem, 0, 0, SRCCOPY);
-
-      // Cleanup.
-      ::SelectObject(dc_mem, bmp_old);
-      ::DeleteObject(bmp_mem);
-      ::DeleteDC(dc_mem);
-    } else {
-      // We're still waiting for the video stream to be initialized.
-      HBRUSH brush = ::CreateSolidBrush(RGB(0, 0, 0));
-      ::FillRect(ps.hdc, &rc, brush);
-      ::DeleteObject(brush);
-
-      HGDIOBJ old_font = ::SelectObject(ps.hdc, GetDefaultFont());
-      ::SetTextColor(ps.hdc, RGB(0xff, 0xff, 0xff));
-      ::SetBkMode(ps.hdc, TRANSPARENT);
-
-      std::string text(kConnecting);
-      if (!local_renderer->image()) {
-        text += kNoVideoStreams;
-      } else {
-        text += kNoIncomingStream;
-      }
-      ::DrawTextA(ps.hdc, text.c_str(), -1, &rc,
-          DT_SINGLELINE | DT_CENTER | DT_VCENTER);
-      ::SelectObject(ps.hdc, old_font);
-    }
-  } else {
-    HBRUSH brush = ::CreateSolidBrush(::GetSysColor(COLOR_WINDOW));
-    ::FillRect(ps.hdc, &rc, brush);
-    ::DeleteObject(brush);
-  }
+  HBRUSH brush = ::CreateSolidBrush(RGB(bufferColor[0], bufferColor[1], bufferColor[2]));
+  ::FillRect(ps.hdc, &rc, brush);
+  ::DeleteObject(brush);
 
   ::EndPaint(handle(), &ps);
 }
@@ -565,8 +486,7 @@ void MainWnd::HandleTabbing() {
 //
 
 MainWnd::VideoRenderer::VideoRenderer(
-    HWND wnd, int width, int height,
-    webrtc::VideoTrackInterface* track_to_render)
+    HWND wnd, int width, int height, TitanTrackInterface* track_to_render)
     : wnd_(wnd), rendered_track_(track_to_render) {
   ::InitializeCriticalSection(&buffer_lock_);
   ZeroMemory(&bmi_, sizeof(bmi_));
@@ -578,12 +498,13 @@ MainWnd::VideoRenderer::VideoRenderer(
   bmi_.bmiHeader.biHeight = -height;
   bmi_.bmiHeader.biSizeImage = width * height *
                               (bmi_.bmiHeader.biBitCount >> 3);
-  rendered_track_->AddOrUpdateSink(this, rtc::VideoSinkWants());
+  rendered_track_.get()->AddOrUpdateSink(this, rtc::VideoSinkWants());
 }
 
-MainWnd::VideoRenderer::~VideoRenderer() {
-  rendered_track_->RemoveSink(this);
-  ::DeleteCriticalSection(&buffer_lock_);
+MainWnd::VideoRenderer::~VideoRenderer() 
+{
+  rendered_track_.get()->RemoveSink(this);
+  DeleteCriticalSection(&buffer_lock_);
 }
 
 void MainWnd::VideoRenderer::SetSize(int width, int height) {
@@ -604,24 +525,14 @@ void MainWnd::VideoRenderer::OnFrame(
     const webrtc::VideoFrame& video_frame) {
 
   {
+    std::cout << "OnFrame" << std::endl;
     AutoLock<VideoRenderer> lock(this);
 
     rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
         video_frame.video_frame_buffer()->ToI420());
-    if (video_frame.rotation() != webrtc::kVideoRotation_0) {
-      buffer = webrtc::I420Buffer::Rotate(*buffer, video_frame.rotation());
-    }
 
-    SetSize(buffer->width(), buffer->height());
-
-    RTC_DCHECK(image_.get() != NULL);
-    libyuv::I420ToARGB(buffer->DataY(), buffer->StrideY(),
-                       buffer->DataU(), buffer->StrideU(),
-                       buffer->DataV(), buffer->StrideV(),
-                       image_.get(),
-                       bmi_.bmiHeader.biWidth *
-                           bmi_.bmiHeader.biBitCount / 8,
-                       buffer->width(), buffer->height());
+    const uint8_t* data = buffer->DataY();
+    memcpy(bufferColor, data, 3);
   }
   InvalidateRect(wnd_, NULL, TRUE);
 }
